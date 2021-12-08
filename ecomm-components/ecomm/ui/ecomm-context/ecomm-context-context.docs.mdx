@@ -1,0 +1,22 @@
+---
+description: EcommContext context.
+labels: ['context']
+---
+
+import { EcommContextContext } from './ecomm-context-context';
+import { EcommContextProvider } from './ecomm-context-context-provider';
+import { MockComponent } from './ecomm-context-context.composition';
+
+## Commerce Context
+
+### Component usage
+
+```tsx live
+() => {
+  return (
+    <EcommContextProvider>
+      <MockComponent />
+    </EcommContextProvider>
+  );
+};
+```
