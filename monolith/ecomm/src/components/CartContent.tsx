@@ -1,21 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 
-import { CartItem, cart, clearCart } from "../lib/cart";
+import { useStore } from "../lib/cart";
 import { currency } from "../lib/products";
 
 export default function CartContent() {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const { cart, clearCart } = useStore();
 
-  useEffect(
-    () =>
-      cart.subscribe((value) => setItems(value?.cartItems ?? [])).unsubscribe,
-    []
-  );
+  if (!cart) {
+    return null;
+  }
 
   return (
     <>
       <div className="my-10 grid grid-cols-4 gap-5">
-        {items.map((item) => (
+        {cart.cartItems.map((item) => (
           <React.Fragment key={item.id}>
             <div>{item.quantity}</div>
             <img src={item.image} alt={item.name} className="max-h-6" />
@@ -29,10 +27,12 @@ export default function CartContent() {
         <div></div>
         <div></div>
         <div className="text-right" id="grand_total">
-          {currency.format(items.reduce((a, v) => a + v.quantity * v.price, 0))}
+          {currency.format(
+            cart.cartItems.reduce((a, v) => a + v.quantity * v.price, 0)
+          )}
         </div>
       </div>
-      {items.length > 0 && (
+      {cart.cartItems.length > 0 && (
         <div className="flex mb-10">
           <div className="flex-grow">
             <button

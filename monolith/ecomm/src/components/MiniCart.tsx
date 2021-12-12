@@ -1,24 +1,19 @@
 import React, { useEffect, useState } from "react";
 
-import { cart, clearCart } from "../lib/cart";
+import { useStore } from "../lib/cart";
 import { currency } from "../lib/products";
 
 export default function MiniCart() {
-  const [items, setItems] = useState(undefined);
+  const { cart, clearCart } = useStore();
   const [showCart, setShowCart] = useState(false);
 
-  useEffect(() => {
-    setItems(cart.value?.cartItems);
-    return cart.subscribe((c) => setItems(c?.cartItems)).unsubscribe;
-  }, []);
-
-  if (!items) return null;
+  if (!cart) return null;
 
   return (
     <>
       <span onClick={() => setShowCart(!showCart)} id="showcart_span">
         <i className="ri-shopping-cart-2-fill text-2xl" id="showcart"></i>
-        {items.length}
+        {cart.cartItems.length}
       </span>
       {showCart && (
         <>
@@ -36,7 +31,7 @@ export default function MiniCart() {
                 gridTemplateColumns: "1fr 3fr 10fr 2fr",
               }}
             >
-              {items.map((item) => (
+              {cart.cartItems.map((item) => (
                 <React.Fragment key={item.id}>
                   <div>{item.quantity}</div>
                   <img src={item.image} alt={item.name} className="max-h-6" />
@@ -51,7 +46,7 @@ export default function MiniCart() {
               <div></div>
               <div>
                 {currency.format(
-                  items.reduce((a, v) => a + v.quantity * v.price, 0)
+                  cart.cartItems.reduce((a, v) => a + v.quantity * v.price, 0)
                 )}
               </div>
             </div>

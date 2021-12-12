@@ -9,10 +9,8 @@ export interface Product {
   longDescription: string;
 }
 
-export const getProducts = async () => {
-  const data = await fetch(`${API_SERVER}/products`).then((res) => res.json());
-  return data;
-};
+export const getProducts = async () =>
+  fetch(`${API_SERVER}/products`).then((res) => res.json());
 
 export const getProductById = (id: string): Promise<Product> =>
   fetch(`${API_SERVER}/products/${id}`).then((res) => res.json());

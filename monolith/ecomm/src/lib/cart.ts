@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { BehaviorSubject } from "rxjs";
+import create from "zustand";
 
 import type { Product } from "./products";
 
@@ -13,75 +12,57 @@ export interface Cart {
 
 const API_SERVER = "http://localhost:8080";
 
-export const jwt = new BehaviorSubject<string>(null);
-export const cart = new BehaviorSubject<Cart>(null);
-
-export const getCart = (): Promise<Cart> =>
+const cartFetch = <T>(method: string, body: unknown): Promise<T> =>
   fetch(`${API_SERVER}/cart`, {
+    method,
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${jwt.value}`,
+      Authorization: `Bearer ${useStore.getState().jwt}`,
     },
-  })
-    .then((res) => res.json())
-    .then((res) => {
-      cart.next(res);
-      return res;
-    });
+    body: body ? JSON.stringify(body) : undefined,
+  }).then((res) => res.json());
 
-export const addToCart = (id): Promise<void> =>
-  fetch(`${API_SERVER}/cart`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${jwt.value}`,
-    },
-    body: JSON.stringify({ id }),
-  })
-    .then((res) => res.json())
-    .then(() => {
-      getCart();
-    });
-
-export const clearCart = (): Promise<void> =>
-  fetch(`${API_SERVER}/cart`, {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json",
-      Authorization: `Bearer ${jwt.value}`,
-    },
-  })
-    .then((res) => res.json())
-    .then(() => {
-      getCart();
-    });
-
-export const login = (username: string, password: string): Promise<string> =>
+const authPost = <T>(body: unknown): Promise<T> =>
   fetch(`${API_SERVER}/auth/login`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify({
+    body: JSON.stringify(body),
+  }).then((res) => res.json());
+
+export const useStore = create<{
+  jwt: string;
+  cart?: Cart;
+  addToCart: (id: number) => Promise<void>;
+  clearCart: () => Promise<void>;
+  updateCart: () => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
+}>((set, get) => ({
+  jwt: "",
+  cart: null,
+
+  updateCart: async (): Promise<void> => {
+    const res = await cartFetch<Cart>("GET", null);
+    set((state) => ({ ...state, cart: res }));
+  },
+
+  addToCart: async (id): Promise<void> => {
+    await cartFetch<void>("POST", { id });
+    get().updateCart();
+  },
+
+  clearCart: async (): Promise<void> => {
+    await cartFetch<void>("DELETE", null);
+    get().updateCart();
+  },
+
+  login: async (username: string, password: string): Promise<void> => {
+    const { access_token } = await authPost<{ access_token: string }>({
       username,
       password,
-    }),
-  })
-    .then((res) => res.json())
-    .then((data) => {
-      jwt.next(data.access_token);
-      getCart();
-      return data.access_token;
     });
-
-export function useLoggedIn(): boolean {
-  const [loggedIn, setLoggedIn] = useState(!!jwt.value);
-  useEffect(() => {
-    setLoggedIn(!!jwt.value);
-    const sub = jwt.subscribe((c) => {
-      setLoggedIn(!!jwt.value);
-    });
-    return () => sub.unsubscribe();
-  }, []);
-  return loggedIn;
-}
+    set((state) => ({ ...state, jwt: access_token }));
+    get().updateCart();
+  },
+}));

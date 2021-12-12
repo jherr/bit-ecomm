@@ -1,15 +1,15 @@
 import React, { useState } from "react";
 
-import { login, useLoggedIn } from "../lib/cart";
+import { useStore } from "../lib/cart";
 
 export default function Login() {
-  const loggedIn = useLoggedIn();
+  const { login, jwt } = useStore();
   const [showLogin, setShowLogin] = useState(false);
 
   const [username, setUsername] = useState("sally");
   const [password, setPassword] = useState("123");
 
-  if (loggedIn) return null;
+  if (jwt) return null;
 
   return (
     <>

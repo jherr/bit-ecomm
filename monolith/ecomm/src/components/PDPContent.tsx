@@ -10,7 +10,7 @@ import { EcommContextProvider } from "@jherr/ecomm.ui.ecomm-context";
 import { ProductImage } from "@jherr/ecomm.ui.product-image";
 
 import { currency, getProductById } from "../lib/products";
-import { addToCart, useLoggedIn } from "../lib/cart";
+import { useStore } from "../lib/cart";
 
 export type ProductImageProps = {
   /**
@@ -43,7 +43,7 @@ function classNames(...classes) {
 
 export default function PDPContent() {
   const [customized, setCustomized] = useState(true);
-  const loggedIn = useLoggedIn();
+  const { addToCart, jwt } = useStore();
   const { id } = useMatch().params;
   const product = useQuery(["product", id], () => getProductById(id)).data;
 
@@ -79,7 +79,7 @@ export default function PDPContent() {
           product={product}
           currency={currency}
           addToCart={addToCart}
-          loggedIn={loggedIn}
+          loggedIn={!!jwt}
         />
       </EcommContextProvider>
     </div>
